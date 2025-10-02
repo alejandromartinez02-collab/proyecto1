@@ -11,38 +11,83 @@ boton.addEventListener("click",function(){
   var valorNombre = inputTarea.value;
   var valorDescripcion = inputDescripcion.value;
   var li = document.createElement("li")
-  var selecion = document.createElement("select")
-  var opcionCompletado = document.createElement("option");
-  opcionCompletado.value="completado"
-  opcionCompletado.textContent="completado";
-  var opcionPendiente = document.createElement("option");
-  opcionPendiente.value="pendiente"
-  opcionPendiente.textContent="pendiente"
-  //añadir las opciones del select
-  selecion.appendChild(opcionCompletado)
-  selecion.appendChild(opcionPendiente)
-  li.textContent = valorNombre+"-"+valorDescripcion;
-  li.appendChild(selecion)
-  lista.appendChild(li)
-  guardarTareas();
-})
+ var seleccion = document.createElement("select")
 
-//funcion guardar tareas para que simpre que añadimos algo se guarde
+ var opcionCompletado = document.createElement("option");
+ opcionCompletado.value = "completado";
+ opcionCompletado.textContent = "completado";
+
+ var opcionPendiente = document.createElement("option");
+ opcionPendiente.value = "pendiente";
+ opcionPendiente.textContent = "pendiente";
+
+ //añadir las opciones al select
+ seleccion.appendChild(opcionCompletado);
+ seleccion.appendChild(opcionPendiente);
+
+ li.textContent = valorNombre + "-" + valorDescripcion;
+ li.appendChild(seleccion);
+ lista.appendChild(li);
+ guardarTareas();
+ })
+
 function guardarTareas(){
   var tareas = [];
-  //sacar todos los li de la lista
   var items = lista.querySelectorAll("li"); 
-
-  //para cada li vamos a hacer
   items.forEach(li => {
-    //separamos el texto en nombre y descripcion usando el guion
     let [nombre, descripcion] = li.firstChild.textContent.split("-");
-    //sacamos el valor actual del select
     let estado = li.querySelector("select").value;
-    //guardamos el objeto en el array
     tareas.push({ nombre, descripcion, estado });
   });
 
-  //guardamos el array de tareas como texto en localStorage
   localStorage.setItem("listaDeTareas", JSON.stringify(tareas));
 }
+
+function cargarTareas(){
+  var tareasGuardadasJSON = localStorage.getItem("listaDeTareas");
+  if (!tareasGuardadasJSON) return;
+
+  var listaDeTareas;
+  try {
+    listaDeTareas = JSON.parse(tareasGuardadasJSON);
+  } catch (error) {
+    console.error("error leyendo localStorage", error);
+    return;
+  }
+
+  if (!Array.isArray(listaDeTareas)) return;
+
+  lista.innerHTML = "";
+ 
+  listaDeTareas.forEach(function (tarea) {
+    var li = document.createElement("li");
+
+    var span = document.createElement("span");
+    span.textContent = (tarea.nombre || "") + " - " + (tarea.descripcion || "");
+
+    var select = document.createElement("select");
+
+    var optPend = document.createElement("option");
+    optPend.value = "pendiente";
+    optPend.textContent = "pendiente";
+
+    var optComp = document.createElement("option");
+    optComp.value = "completado";
+    optComp.textContent = "completado";
+
+    select.appendChild(optPend);
+    select.appendChild(optComp);
+
+    // Asignar el estado guardado
+    select.value = tarea.estado || "pendiente";
+
+    // Guardar al cambiar
+    select.addEventListener("change", guardarTareas);
+
+    li.appendChild(span);
+    li.appendChild(select);
+    lista.appendChild(li);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", cargarTareas);
